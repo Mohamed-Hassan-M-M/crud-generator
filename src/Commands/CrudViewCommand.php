@@ -475,6 +475,9 @@ class CrudViewCommand extends Command
         $end = $this->delimiter[1];
 
         $formGroup = File::get($this->viewDirectoryPath . 'form-fields/wrap-field.blade.stub');
+        if(in_array($item['name'], $this->translatableArray)){
+            $formGroup = File::get($this->viewDirectoryPath . 'form-fields/wrap-trans-field.blade.stub');
+        }
 
         $labelText = "'" . ucwords(strtolower(str_replace('_', ' ', $item['name']))) . "'";
 
