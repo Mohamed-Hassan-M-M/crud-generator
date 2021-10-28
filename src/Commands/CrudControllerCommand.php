@@ -108,9 +108,8 @@ class CrudControllerCommand extends GeneratorCommand
         $validations = rtrim($this->option('validations'), ';');
 
         $validationRules = '';
-        $validationRulesNotTranslatable = [];
-        $validationRulesTranslatable = [];
         if (trim($validations) != '') {
+            $validationRules = "\$this->validate(\$request, [";
 
             $rules = explode(';', $validations);
             foreach ($rules as $v) {
@@ -124,11 +123,15 @@ class CrudControllerCommand extends GeneratorCommand
                 $rules = trim($parts[1]);
 
                 if(!in_array($fieldName, $translatableArray)){//edit mhmm
-                    $validationRulesNotTranslatable[$fieldName] = $rules;
+                    $validationRules .= "\n\t\t\t'$fieldName' => '$rules',";
+                }
+                else{
+                    \App\Helpers\ValidationRules::getValidationTemplate($translatableArray,$validationRules);//mhmm
                 }
             }
-            $validationRulesTranslatable = "\App\Helpers\ValidationRules::getValidation($translatableArray);";
-            $validationRules = "\$this->validate(\$request, array_merge($validationRulesNotTranslatable,$validationRulesTranslatable))";
+
+            $validationRules = substr($validationRules, 0, -1); // lose the last comma
+            $validationRules .= "\n\t\t]);";
         }
 
         if (\App::VERSION() < '5.3') {
