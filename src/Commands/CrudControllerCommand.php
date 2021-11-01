@@ -50,8 +50,8 @@ class CrudControllerCommand extends GeneratorCommand
     protected function getStub()
     {
         return config('crudgenerator.custom_template')
-        ? config('crudgenerator.path') . '/controller.stub'
-        : __DIR__ . '/../stubs/controller.stub';
+            ? config('crudgenerator.path') . '/controller.stub'
+            : __DIR__ . '/../stubs/controller.stub';
     }
 
     /**
@@ -108,8 +108,9 @@ class CrudControllerCommand extends GeneratorCommand
         $validations = rtrim($this->option('validations'), ';');
 
         $validationRules = '';
+        $validationRulesNot = '[';
+        $validationRulesTrans = '[';
         if (trim($validations) != '') {
-            $validationRules = "\$this->validate(\$request, [";
 
             $rules = explode(';', $validations);
             foreach ($rules as $v) {
@@ -120,18 +121,22 @@ class CrudControllerCommand extends GeneratorCommand
                 // extract field name and args
                 $parts = explode('#', $v);
                 $fieldName = trim($parts[0]);
-                $rules = trim($parts[1]);
 
                 if(!in_array($fieldName, $translatableArray)){//edit mhmm
-                    $validationRules .= "\n\t\t\t'$fieldName' => '$rules',";
+                    $validationRulesNot .= "'$fieldName'=> trim('$parts[1]'),";
                 }
                 else{
-                    \App\Helpers\ValidationRules::getValidationTemplate($translatableArray,$validationRules);//mhmm
+                    $validationRulesTrans .= "'$fieldName',";
                 }
             }
 
-            $validationRules = substr($validationRules, 0, -1); // lose the last comma
-            $validationRules .= "\n\t\t]);";
+            $validationRulesNot .= ']';
+            $validationRulesTrans .= ']';
+            $validationRules = <<<EOD
+        \$validation_arr = \App\Helpers\ValidationRules::getValidation($validationRulesTrans);
+        \$this->validate(\$request, array_merge($validationRulesNot, \$validation_arr)
+        );
+EOD;
         }
 
         if (\App::VERSION() < '5.3') {
