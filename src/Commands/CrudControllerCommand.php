@@ -108,8 +108,8 @@ class CrudControllerCommand extends GeneratorCommand
         $validations = rtrim($this->option('validations'), ';');
 
         $validationRules = '';
-        $validationRulesNot = '[';
-        $validationRulesTrans = '[';
+        $validationRulesNotTranslatable = [];
+        $validationRulesTranslatable = [];
         if (trim($validations) != '') {
 
             $rules = explode(';', $validations);
@@ -121,22 +121,14 @@ class CrudControllerCommand extends GeneratorCommand
                 // extract field name and args
                 $parts = explode('#', $v);
                 $fieldName = trim($parts[0]);
+                $rules = trim($parts[1]);
 
                 if(!in_array($fieldName, $translatableArray)){//edit mhmm
-                    $validationRulesNot .= "'$fieldName'=> trim('$parts[1]'),";
-                }
-                else{
-                    $validationRulesTrans .= "'$fieldName',";
+                    $validationRulesNotTranslatable[$fieldName] = $rules;
                 }
             }
-
-            $validationRulesNot .= ']';
-            $validationRulesTrans .= ']';
-            $validationRules = <<<EOD
-        \$validation_arr = \App\Helpers\ValidationRules::getValidation($validationRulesTrans);
-        \$this->validate(\$request, array_merge($validationRulesNot, \$validation_arr)
-        );
-EOD;
+            $validationRulesTranslatable = "\App\Helpers\ValidationRules::getValidation($translatableArray);";
+            $validationRules = "\$this->validate(\$request, array_merge($validationRulesNotTranslatable,$validationRulesTranslatable))";
         }
 
         if (\App::VERSION() < '5.3') {
