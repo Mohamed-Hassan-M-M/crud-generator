@@ -127,8 +127,10 @@ class CrudControllerCommand extends GeneratorCommand
                     $validationRulesNotTranslatable[$fieldName] = $rules;
                 }
             }
-            $validationRulesTranslatable = "\App\Helpers\ValidationRules::getValidation($translatableArray);";
-            $validationRules = "\$this->validate(\$request, array_merge($validationRulesNotTranslatable,$validationRulesTranslatable))";
+            $translatableString = "['".implode("','",$translatableArray)."']";
+            $validationRulesNotTranslatableString = "['".implode("','",$validationRulesNotTranslatable)."']";
+            $validationRulesTranslatable = "\$validationRulesTranslatable = \App\Helpers\ValidationRules::getValidation($translatableString);";
+            $validationRules = "\$this->validate(\$request, array_merge($validationRulesNotTranslatableString,"."\$validationRulesTranslatable));";
         }
 
         if (\App::VERSION() < '5.3') {
@@ -183,7 +185,7 @@ EOD;
             ->replaceRouteGroup($stub, $routeGroup)
             ->replaceRoutePrefix($stub, $routePrefix)
             ->replaceRoutePrefixCap($stub, $routePrefixCap)
-            ->replaceValidationRules($stub, $validationRules)
+            ->replaceValidationRules($stub, $validationRules, $validationRulesTranslatable)
             ->replacePaginationNumber($stub, $perPage)
             ->replaceFileSnippet($stub, $fileSnippet)
             ->replaceTranslatable($stub, $translatableWithCode, $translatable)//edit mhmm
@@ -354,9 +356,9 @@ EOD;
      *
      * @return $this
      */
-    protected function replaceValidationRules(&$stub, $validationRules)
+    protected function replaceValidationRules(&$stub, $validationRules, $validationRulesTranslatable)
     {
-        $stub = str_replace('{{validationRules}}', $validationRules, $stub);
+        $stub = str_replace('{{validationRules}}', $validationRulesTranslatable . "\r\n" . $validationRules , $stub);
 
         return $this;
     }
