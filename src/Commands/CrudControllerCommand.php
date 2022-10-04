@@ -109,7 +109,7 @@ class CrudControllerCommand extends GeneratorCommand
 
         $validationRules = '';
         $validationRulesNotTranslatable = [];
-        $validationRulesTranslatable = [];
+        $validationRulesTranslatable = '';
         if (trim($validations) != '') {
 
             $rules = explode(';', $validations);
